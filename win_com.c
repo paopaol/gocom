@@ -104,7 +104,8 @@ int com_set(int __hf, DCB *__dcb)
 int com_read(int __hf, void *__b, int __l)
 {
 	BOOL 		ret;
-	size_t		rl;
+	size_t		rl = 0;
+
 	int 		addr = *(int *)__b;
 	char 		*p = (char *)addr;
 	DWORD		err;

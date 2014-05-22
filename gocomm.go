@@ -110,8 +110,10 @@ type WinCom struct {
 }
 
 func (com *WinCom) Read(out []byte) (int, error) {
+
 	n := C.com_read(C.int(com.fd),
-		unsafe.Pointer(&out), C.int(cap(out)))
+		unsafe.Pointer(&out), C.int(len(out)))
+
 	if n < 0 {
 		return -1, &WinComErr{"读串口", "失败"}
 	}
@@ -136,23 +138,23 @@ func (com *WinCom) Readn(out []byte, l int) (int, error) {
 	var nread int = 0
 	var n int = 0
 	var err error
-
+	
 	if l <= 0 {
 		return 0, nil
 	}
 
 	for {
-		n, err = com.Read(out[nread:])
+		n, err = com.Read(out[nread:l])
 		if err != nil {
 			return -1, err
+		}
+		//数据没有了，返回实际读到的长度
+		if n == 0 {
+			return nread, nil
 		}
 		nread += n
 		//如果读够指定数量，则返回
 		if nread == l {
-			return nread, nil
-		}
-		//数据没有了，返回实际读到的长度
-		if n == 0 {
 			return nread, nil
 		}
 	}
@@ -171,10 +173,10 @@ func (com *WinCom) Writen(in []byte, l int) (int, error) {
 		if err != nil {
 			return -1, err
 		}
-		
+
 		//正好
 		if n == l {
-			
+
 			return l, nil
 		}
 		//没了，写完了,返回实际写入的数据
@@ -197,6 +199,7 @@ func (com *WinCom) ReadRecord(out []byte) (int, error) {
 	if err != nil {
 		return -1, err
 	}
+	
 	if n != 1 || buf[0] != STX {
 		return -1, &WinComErr{"读串口", "头部字段有误"}
 	}
@@ -208,9 +211,8 @@ func (com *WinCom) ReadRecord(out []byte) (int, error) {
 	}
 	if n != 2 {
 		return -1, &WinComErr{"读串口", "长度字段有误"}
-	}
-
-	//读data
+	}
+	//读data 
 	l, _ := strconv.Atoi(fmt.Sprintf("%x", buf[0:2]))
 	data := make([]byte, l)
 	n, err = com.Readn(data, l)
