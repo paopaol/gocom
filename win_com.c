@@ -22,7 +22,6 @@ int com_open(int __com_num)
 	timeout.WriteTotalTimeoutMultiplier = MAXDWORD;
 	timeout.WriteTotalTimeoutConstant = 1000 * 1000;
 	SetCommTimeouts(hf,&timeout); 
-	//PurgeComm(hf, PURGE_TXCLEAR|PURGE_RXCLEAR);
 	PurgeComm((HANDLE)hf, PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR);
 	return (int)hf;
 }
@@ -110,12 +109,10 @@ int com_read(int __hf, void *__b, int __l)
 	char 		*p = (char *)addr;
 	DWORD		err;
 
-
 	ret = ReadFile((HANDLE)__hf, p, __l,(PDWORD)&rl,NULL);
 	if(ret == 0){	
 			return -1;
 	}
-	//PurgeComm((HANDLE)__hf, PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR);
 	return rl;
 }
 
@@ -127,7 +124,6 @@ int com_write(int __hf, const void *__wb, int __wl)
 	char 		*p = (char *)addr;
 
 	ret = WriteFile((HANDLE)__hf, p, __wl,(PDWORD)&wl,NULL);
-	//FlushFileBuffers((HANDLE)__hf);
 	if(ret == 0){
 		return -1;
 	}
